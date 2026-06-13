@@ -43,13 +43,3 @@ An elegant, interactive attendance tracker and simulation web application design
    You can open `index.html` directly in your browser or run it using a local server extension (e.g., Live Server in VS Code).
 
 ---
-
-## 🏷️ GitHub Repository Metadata
-
-Use these details to set up the **About** section of your GitHub repository:
-
-* **Description**:
-  > A beautiful, interactive attendance tracker and simulator web app for college students featuring timetable imports, OCR scanning, and Firebase cloud sync.
-  
-* **Suggested Topics (Tags)**:
-  `attendance-tracker` · `student-utilities` · `tesseract-js` · `ocr` · `firebase` · `glassmorphism` · `javascript` · `single-page-app` · `vercel-deployment`
