@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AttenTrack - Attendance Tracker & Simulator</title>
+  <!-- Google Fonts for premium typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- PDF.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <!-- Tesseract.js CDN -->
+  <script src="https://unpkg.com/tesseract.js@v4.0.1/dist/tesseract.min.js"></script>
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Dynamic Mesh Background -->
+  <div class="bg-wrapper">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Main Mobile Container -->
+  <div class="app-container">
+    
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <h1>AttenTrack</h1>
+        <p id="current-date-display">Friday, June 5</p>
+      </div>
+      <div class="header-actions" style="display:flex; align-items:center; gap: 8px;">
+        <div id="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;" title="Profile Settings">
+          <i data-lucide="user" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
+        </div>
+        <button class="icon-btn" id="header-add-subject-btn" title="Add Subject">
+          <i data-lucide="plus"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Content Viewport (Scrollable) -->
+    <main class="app-content" id="app-viewport">
+      
+      <!-- 1. DASHBOARD TAB -->
+      <section id="tab-dashboard" class="tab-content active">
+        <!-- Overall attendance visual card -->
+        <div class="dashboard-summary-card glass">
+          <div class="summary-info">
+            <p>Overall Attendance</p>
+            <h2 id="overall-percentage">0.0%</h2>
+            <div class="summary-progress-bar">
+              <div class="summary-progress-fill" id="overall-progress-fill" style="width: 0%;"></div>
+            </div>
+            <p id="overall-status-text" style="margin-top: 8px; font-size: 11px; font-weight: 600;">Loading status...</p>
+          </div>
+          <div class="subject-status-ring-container" style="width: 70px; height: 70px;">
+            <svg class="progress-ring" width="70" height="70">
+              <circle class="progress-ring-circle-bg" cx="35" cy="35" r="28" stroke-width="5" />
+              <circle class="progress-ring-circle" id="overall-progress-ring" cx="35" cy="35" r="28" stroke-width="5" stroke="var(--color-primary)" />
+            </svg>
+            <div class="ring-percentage-label" id="overall-ring-label" style="font-size: 13px;">0%</div>
+          </div>
+        </div>
+
+        <!-- Timetable Header & Day Selector -->
+        <div class="section-title-bar">
+          <h2 class="section-title">Today's Schedule</h2>
+        </div>
+        <div class="day-selector-pills" id="day-selector">
+          <button class="day-pill" data-day="1">Mon</button>
+          <button class="day-pill" data-day="2">Tue</button>
+          <button class="day-pill" data-day="3">Wed</button>
+          <button class="day-pill" data-day="4">Thu</button>
+          <button class="day-pill" data-day="5">Fri</button>
+          <button class="day-pill" data-day="6">Sat</button>
+          <button class="day-pill" data-day="0">Sun</button>
+        </div>
+
+        <!-- Timetable Class Cards -->
+        <div class="timetable-list" id="timetable-classes">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- 2. ANALYTICS TAB -->
+      <section id="tab-analytics" class="tab-content">
+        <div class="section-title-bar">
+          <h2 class="section-title">Detailed Analytics</h2>
+        </div>
+
+        <div class="analytics-stats-grid">
+          <div class="stat-card glass">
+            <span class="label">Total Classes</span>
+            <span class="value" id="stat-total-held">0</span>
+            <span class="footer">across all subjects</span>
+          </div>
+          <div class="stat-card glass">
+            <span class="label">Attended</span>
+            <span class="value" id="stat-total-attended" style="color: var(--color-safe);">0</span>
+            <span class="footer">classes registered</span>
+          </div>
+        </div>
+
+        <div class="section-title-bar" style="margin-top: 10px;">
+          <h2 class="section-title">Subject Summary</h2>
+        </div>
+
+        <div class="subjects-list" id="analytics-subjects-list">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- 3. WHAT-IF SIMULATOR TAB -->
+      <section id="tab-simulator" class="tab-content">
+        <div class="section-title-bar">
+          <h2 class="section-title">What-If Simulator</h2>
+        </div>
+
+        <div class="simulator-form-container">
+          <div class="form-group">
+            <label for="sim-subject-select">Select Subject</label>
+            <select id="sim-subject-select" class="glass-input">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <div class="form-group glass" style="padding: 16px;">
+            <label for="sim-attend-slider" style="display:flex; justify-content:space-between;">
+              <span>Attend next classes</span>
+              <span class="slider-val-box" id="sim-attend-val" style="color: var(--color-safe);">0</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="sim-attend-slider" class="glass-range" min="0" max="20" value="0">
+            </div>
+            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 6px;">Simulates attending subsequent consecutive lectures.</p>
+          </div>
+
+          <div class="form-group glass" style="padding: 16px;">
+            <label for="sim-skip-slider" style="display:flex; justify-content:space-between;">
+              <span>Skip next classes</span>
+              <span class="slider-val-box" id="sim-skip-val" style="color: var(--color-critical);">0</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="sim-skip-slider" class="glass-range" min="0" max="20" value="0">
+            </div>
+            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 6px;">Simulates skipping subsequent consecutive lectures.</p>
+          </div>
+
+          <!-- Simulation Result Display -->
+          <div class="simulator-result-box glass">
+            <p style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Projected Attendance</p>
+            <div class="sim-overall-percentage">
+              <span class="sim-percentage-val" id="sim-projected-pct">75.0</span>
+              <span class="sim-percentage-pct">%</span>
+            </div>
+            <div class="sim-verdict-badge" id="sim-verdict-badge">
+              <i data-lucide="check-circle-2"></i>
+              <span id="sim-verdict-text">Safe</span>
+            </div>
+            <div class="sim-comparison-details" id="sim-comparison-details">
+              Your attendance will change by 0.0%.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. SETTINGS TAB -->
+      <section id="tab-settings" class="tab-content">
+        <div class="section-title-bar">
+          <h2 class="section-title">Settings</h2>
+        </div>
+
+        <div class="settings-menu">
+          <!-- Cloud Account Card -->
+          <div class="settings-item glass" id="settings-account-card" style="flex-direction: column; align-items: stretch; gap: 14px; cursor: default;">
+            <div style="display:flex; align-items:center; gap: 14px;">
+              <div id="account-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.03); display:flex; align-items:center; justify-content:center; border: 1px solid var(--glass-border); overflow:hidden;">
+                <i data-lucide="user" style="color: var(--text-secondary); width: 20px; height: 20px;"></i>
+              </div>
+              <div style="flex: 1;">
+                <h4 id="account-name">Guest Student</h4>
+                <p id="account-email" style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Offline Guest Mode</p>
+              </div>
+            </div>
+            <div style="display:flex; gap: 8px;">
+              <button class="btn btn-secondary" id="account-action-btn" style="padding: 8px 12px; font-size:11px; height: 32px; flex: 1;">
+                <i data-lucide="log-in" style="width:12px;height:12px;"></i> Sign In
+              </button>
+              <button class="btn btn-secondary" id="settings-db-config-btn" style="padding: 8px 12px; font-size:11px; height: 32px; flex: 1;" title="Firebase Settings">
+                <i data-lucide="database" style="width:12px;height:12px;"></i> Cloud DB
+              </button>
+            </div>
+          </div>
+          <!-- Threshold Configurator -->
+          <div class="settings-item glass" style="flex-direction: column; align-items: stretch; gap: 12px; cursor: default;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div class="settings-item-label">
+                <i data-lucide="target"></i>
+                <div class="settings-item-info">
+                  <h4>Target Attendance</h4>
+                  <p>Threshold to maintain safety status</p>
+                </div>
+              </div>
+              <div style="font-weight: 800; font-size: 16px; color: var(--color-primary);" id="settings-threshold-label">75%</div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="settings-threshold-slider" class="glass-range" min="50" max="100" value="75">
+            </div>
+          </div>
+
+          <!-- Semester Selector -->
+          <div class="settings-item glass" style="flex-direction: column; align-items: stretch; gap: 8px; cursor: default;">
+            <div class="settings-item-label" style="justify-content: space-between; width: 100%;">
+              <div style="display:flex; align-items:center; gap: 12px;">
+                <i data-lucide="graduation-cap" style="color: var(--color-primary);"></i>
+                <div class="settings-item-info">
+                  <h4>Current Semester</h4>
+                  <p>Choose your active academic term</p>
+                </div>
+              </div>
+              <select id="settings-semester-select" class="glass-input" style="width: 140px; padding: 6px 12px; font-size: 13px;">
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+                <option value="Semester 3">Semester 3</option>
+                <option value="Semester 4">Semester 4</option>
+                <option value="Semester 5">Semester 5</option>
+                <option value="Semester 6">Semester 6</option>
+                <option value="Semester 7">Semester 7</option>
+                <option value="Semester 8">Semester 8</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Upload Timetable trigger -->
+          <div class="settings-item glass" id="settings-upload-timetable">
+            <div class="settings-item-label">
+              <i data-lucide="upload-cloud"></i>
+              <div class="settings-item-info">
+                <h4>Upload Timetable</h4>
+                <p>Import from PDF or Image (OCR)</p>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="color: var(--text-secondary);"></i>
+          </div>
+
+          <!-- Edit Timetable trigger -->
+          <div class="settings-item glass" id="settings-edit-timetable">
+            <div class="settings-item-label">
+              <i data-lucide="calendar"></i>
+              <div class="settings-item-info">
+                <h4>Manage Timetable</h4>
+                <p>Configure days, times, and classes</p>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="color: var(--text-secondary);"></i>
+          </div>
+
+          <!-- Reset Data trigger -->
+          <div class="settings-item glass" id="settings-reset-data" style="border-color: rgba(239, 68, 68, 0.15);">
+            <div class="settings-item-label">
+              <i data-lucide="trash-2" style="color: var(--color-critical);"></i>
+              <div class="settings-item-info">
+                <h4>Reset App Data</h4>
+                <p>Delete all changes and reload defaults</p>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="color: var(--text-secondary);"></i>
+          </div>
+
+          <!-- App Information Card -->
+          <div class="glass" style="padding: 16px; display:flex; flex-direction:column; gap: 8px; font-size: 11px; color: var(--text-secondary); text-align: center; margin-top: 10px;">
+            <p style="font-weight: 700; color: white;">AttenTrack Mobile v1.0.0</p>
+            <p>Designed for college students. Fully client-side, powered by LocalStorage.</p>
+            <p style="opacity: 0.5;">Developed by Antigravity AI</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav-bar">
+      <div class="nav-tab active" data-target="dashboard">
+        <i data-lucide="calendar-days"></i>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-tab" data-target="analytics">
+        <i data-lucide="bar-chart-3"></i>
+        <span>Analytics</span>
+      </div>
+      <div class="nav-tab" data-target="simulator">
+        <i data-lucide="sparkles"></i>
+        <span>Simulator</span>
+      </div>
+      <div class="nav-tab" data-target="settings">
+        <i data-lucide="sliders-horizontal"></i>
+        <span>Settings</span>
+      </div>
+    </nav>
+
+    <!-- Floating Action Button (FAB) -->
+    <div class="fab" id="app-fab" title="Quick Add">
+      <i data-lucide="plus"></i>
+    </div>
+
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- MODALS SYSTEM -->
+  
+  <!-- A. Add/Edit Subject Modal -->
+  <div class="modal-overlay" id="modal-subject">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="subject-modal-title">Add New Subject</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-subject')">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form class="modal-form" id="subject-form">
+        <input type="hidden" id="subject-form-id">
+        <div class="form-group">
+          <label for="subject-form-name">Subject Name</label>
+          <input type="text" id="subject-form-name" class="glass-input" placeholder="e.g. Mathematics II, Artificial Intelligence" required>
+        </div>
+        <div class="form-group">
+          <label for="subject-form-room">Room Number</label>
+          <input type="text" id="subject-form-room" class="glass-input" placeholder="e.g. Room 402, Lab A">
+        </div>
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="subject-form-attended">Classes Attended</label>
+            <input type="number" id="subject-form-attended" class="glass-input" min="0" value="0" required>
+          </div>
+          <div class="form-group">
+            <label for="subject-form-total">Total Classes Held</label>
+            <input type="number" id="subject-form-total" class="glass-input" min="0" value="0" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-subject')">Cancel</button>
+          <button type="button" class="btn btn-danger" id="subject-delete-btn" style="display:none;">Delete</button>
+          <button type="submit" class="btn btn-primary" id="subject-submit-btn">Save Subject</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- B. Timetable Slots Manager Modal -->
+  <div class="modal-overlay" id="modal-timetable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Manage Timetable</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-timetable')">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <h4 style="font-size: 13px; font-weight:600; color: var(--text-secondary); margin-bottom: 8px;">Existing Slots</h4>
+        <div class="timetable-edit-list" id="timetable-edit-list">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+      
+      <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 16px;">
+      
+      <h4 style="font-size: 13px; font-weight:600; color: var(--text-secondary); margin-bottom: 8px;">Add Class Slot</h4>
+      <form class="modal-form" id="timetable-form">
+        <div class="form-group">
+          <label for="slot-subject-select">Subject</label>
+          <select id="slot-subject-select" class="glass-input" required>
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="slot-day-select">Day of Week</label>
+            <select id="slot-day-select" class="glass-input" required>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="slot-time-input">Time</label>
+            <input type="text" id="slot-time-input" class="glass-input" placeholder="e.g. 09:00 AM, 2:00 PM" required>
+          </div>
+        </div>
+        <div class="modal-footer" style="margin-top: 8px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-timetable')">Done</button>
+          <button type="submit" class="btn btn-primary">Add Slot</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- C. Timetable Import Review Modal -->
+  <div class="modal-overlay" id="modal-import-review">
+    <div class="modal-content" style="max-height: 90%;">
+      <div class="modal-header">
+        <h3>Timetable Import Review</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-import-review')">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Loading State Overlay inside Modal -->
+      <div id="import-loading-container" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding: 30px 10px; gap: 16px; text-align: center;">
+        <div class="loader-spinner" style="border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: var(--color-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+        <p id="import-loading-status" style="font-size: 13px; font-weight:600; color: var(--text-secondary);">Extracting text...</p>
+        <div class="summary-progress-bar" style="max-width: 240px; margin: 0 auto; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; width: 100%;">
+          <div class="summary-progress-fill" id="import-ocr-progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); border-radius: 3px; transition: width 0.3s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Review content list -->
+      <div id="import-review-container" style="display:flex; flex-direction:column; gap: 16px;">
+        <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+          We parsed the timetable file. Please verify or rename subjects, and verify class slots below.
+        </p>
+        
+        <div style="max-height: 380px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 10px;" id="import-review-list">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="modal-footer" style="margin-top: 10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-import-review')">Cancel</button>
+          <button type="button" class="btn btn-primary" id="import-confirm-btn">Confirm Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D. Firebase Configuration Modal -->
+  <div class="modal-overlay" id="modal-firebase-config">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Firebase DB Config</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-firebase-config')">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <p style="font-size:11px; color:var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+        Paste your Firebase configuration JSON below to enable real Google Account cloud syncing. (Leave empty to revert to offline Guest mode).
+      </p>
+      <form class="modal-form" id="firebase-config-form">
+        <div class="form-group">
+          <label for="config-json">Firebase Config JSON</label>
+          <textarea id="config-json" class="glass-input" rows="8" placeholder='{&#10;  "apiKey": "AIzaSy...",&#10;  "authDomain": "attentrack.firebaseapp.com",&#10;  "projectId": "attentrack",&#10;  "storageBucket": "attentrack.appspot.com",&#10;  "messagingSenderId": "...",&#10;  "appId": "..."&#10;}' style="width: 100%; font-family: monospace; font-size: 11px; line-height: 1.4; resize: none;"></textarea>
+        </div>
+        <div class="modal-footer" style="margin-top: 8px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-firebase-config')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Config</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Google Login Screen Overlay -->
+  <div id="login-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 9, 19, 0.96); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; transition: opacity 0.4s ease;">
+    <div class="glass" style="max-width: 380px; padding: 36px 24px; display: flex; flex-direction: column; gap: 24px; align-items: center; width: 100%;">
+      <div style="background: var(--color-primary-glow); width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(139, 92, 246, 0.3);">
+        <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--color-primary);"></i>
+      </div>
+      <div>
+        <h2 style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome to AttenTrack</h2>
+        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">Simulate and monitor your attendance with custom timetables, safety targets, and smart OCR imports.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap: 12px; width: 100%;">
+        <!-- Google Sign In Button -->
+        <button class="btn btn-primary" id="login-google-btn" style="background: white; color: #1f2937; border-color: #e5e7eb; font-weight: 600; display:flex; align-items:center; justify-content:center; gap: 10px; box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08); width: 100%;">
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.69-1.55 2.69-3.84 2.69-6.57z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.33-1.59-5.05-3.73H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.95 10.7c-.18-.54-.28-1.12-.28-1.7s.1-1.16.28-1.7V5H.95C.35 6.2.01 7.56.01 9s.34 2.8.94 4l3-2.3z"/>
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.03C13.07.23 10.77 0 9 0 5.5 0 2.43 2.11.95 5.09l3 2.3c.72-2.14 2.7-3.73 5.05-3.73z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <!-- Guest Mode Button -->
+        <button class="btn btn-secondary" id="login-guest-btn" style="width: 100%;">
+          <i data-lucide="user"></i> Enter as Guest (Offline)
+        </button>
+      </div>
+      <div id="login-sync-status" style="font-size: 10px; color: var(--text-muted);">
+        Cloud synchronization: Offline (Local storage active)
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Wizard Overlay -->
+  <div id="onboarding-wizard" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 9, 19, 0.98); z-index: 9998; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; transition: opacity 0.4s ease;">
+    <div class="glass" style="max-width: 400px; width: 100%; padding: 28px 20px; display: flex; flex-direction: column; gap: 20px; text-align: left;">
+      
+      <!-- Wizard Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+        <h3 id="wizard-step-title" style="font-size: 16px; font-weight:700;">Setup: Semester & Target</h3>
+        <span id="wizard-step-indicator" style="font-size: 11px; font-weight:700; color: var(--color-primary);">Step 1 of 3</span>
+      </div>
+
+      <!-- Step 1: Semester & Threshold -->
+      <div id="wizard-step-1" class="wizard-step" style="display: flex; flex-direction: column; gap: 16px;">
+        <p style="font-size:12px; color: var(--text-secondary); line-height: 1.5;">Let's customize your academic profile to calculate your attendance safety margins.</p>
+        <div class="form-group">
+          <label for="wizard-semester">Which semester are you in?</label>
+          <select id="wizard-semester" class="glass-input">
+            <option value="Semester 1">Semester 1</option>
+            <option value="Semester 2">Semester 2</option>
+            <option value="Semester 3">Semester 3</option>
+            <option value="Semester 4">Semester 4</option>
+            <option value="Semester 5">Semester 5</option>
+            <option value="Semester 6">Semester 6</option>
+            <option value="Semester 7">Semester 7</option>
+            <option value="Semester 8">Semester 8</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label for="wizard-threshold">Minimum Attendance Target</label>
+            <strong id="wizard-threshold-val" style="color:var(--color-primary);">75%</strong>
+          </div>
+          <div class="slider-container">
+            <input type="range" id="wizard-threshold" class="glass-range" min="50" max="100" value="75">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="goToWizardStep(2)" style="margin-top: 10px;">Next: Add Subjects</button>
+      </div>
+
+      <!-- Step 2: Add Subjects -->
+      <div id="wizard-step-2" class="wizard-step" style="display: none; flex-direction: column; gap: 16px;">
+        <p style="font-size:12px; color: var(--text-secondary); line-height: 1.5;">Register the subjects you are taking this semester. All attendance statistics will start from zero.</p>
+        <div class="form-group">
+          <label for="wizard-subject-name">Subject Name</label>
+          <div style="display:flex; gap: 8px;">
+            <input type="text" id="wizard-subject-name" class="glass-input" placeholder="e.g. Data Structures, Economics">
+            <button class="btn btn-primary" id="wizard-add-subject-btn" style="width: 60px; padding: 0;">Add</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Added Subjects</label>
+          <div id="wizard-subjects-list" style="max-height: 150px; overflow-y:auto; display:flex; flex-direction:column; gap: 8px; padding-right: 4px;">
+            <p style="font-size:11px; color: var(--text-muted); text-align:center; padding: 10px 0;">No subjects added yet.</p>
+          </div>
+        </div>
+        <div style="display:flex; gap: 10px; margin-top: 10px;">
+          <button class="btn btn-secondary" onclick="goToWizardStep(1)">Back</button>
+          <button class="btn btn-primary" onclick="goToWizardStep(3)" style="flex:2;">Next: Add Timetable</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Add Timetable -->
+      <div id="wizard-step-3" class="wizard-step" style="display: none; flex-direction: column; gap: 16px;">
+        <p style="font-size:12px; color: var(--text-secondary); line-height: 1.5;">Configure your weekly schedule slots. You can also import them from a file.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Add Class Slot</label>
+          <button class="btn btn-secondary" onclick="elements.timetableFileInput.click()" style="padding: 4px 10px; font-size:10px; height: 26px; border-radius: 8px; width: auto; flex: 0;">
+            <i data-lucide="upload-cloud" style="width:10px;height:10px;"></i> Import
+          </button>
+        </div>
+        <div id="wizard-slot-form" style="display:flex; flex-direction:column; gap: 10px;">
+          <div class="form-group">
+            <select id="wizard-slot-subject" class="glass-input">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-row-grid">
+            <select id="wizard-slot-day" class="glass-input">
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+            <input type="text" id="wizard-slot-time" class="glass-input" placeholder="e.g. 10:00 AM">
+          </div>
+          <div style="display:flex; gap: 8px;">
+            <input type="text" id="wizard-slot-room" class="glass-input" placeholder="Room (optional)">
+            <button id="wizard-add-slot-btn" class="btn btn-primary" style="width: 80px; font-size:12px; padding:0;">Add Slot</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Scheduled Slots</label>
+          <div id="wizard-slots-list" style="max-height: 120px; overflow-y:auto; display:flex; flex-direction:column; gap: 6px; padding-right: 4px;">
+            <p style="font-size:11px; color: var(--text-muted); text-align:center; padding: 10px 0;">No slots scheduled yet.</p>
+          </div>
+        </div>
+        <div style="display:flex; gap: 10px; margin-top: 10px;">
+          <button class="btn btn-secondary" onclick="goToWizardStep(2)">Back</button>
+          <button class="btn btn-primary" onclick="completeOnboarding()" style="flex:2;">Finish Setup</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hidden File Input -->
+  <input type="file" id="timetable-file-input" accept="application/pdf, image/*" style="display: none;">
+
+  <!-- JavaScript logic -->
+  <script src="app.js"></script>
+</body>
+</html>
