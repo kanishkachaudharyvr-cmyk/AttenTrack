@@ -73,23 +73,26 @@
           </div>
         </div>
 
-        <!-- Timetable Header & Day Selector -->
-        <div class="section-title-bar">
-          <h2 class="section-title">Today's Schedule</h2>
-        </div>
-        <div class="day-selector-pills" id="day-selector">
-          <button class="day-pill" data-day="1">Mon</button>
-          <button class="day-pill" data-day="2">Tue</button>
-          <button class="day-pill" data-day="3">Wed</button>
-          <button class="day-pill" data-day="4">Thu</button>
-          <button class="day-pill" data-day="5">Fri</button>
-          <button class="day-pill" data-day="6">Sat</button>
-          <button class="day-pill" data-day="0">Sun</button>
-        </div>
+        <!-- Today's Schedule Column wrapper for desktop grid -->
+        <div class="schedule-column">
+          <!-- Timetable Header & Day Selector -->
+          <div class="section-title-bar">
+            <h2 class="section-title">Today's Schedule</h2>
+          </div>
+          <div class="day-selector-pills" id="day-selector">
+            <button class="day-pill" data-day="1">Mon</button>
+            <button class="day-pill" data-day="2">Tue</button>
+            <button class="day-pill" data-day="3">Wed</button>
+            <button class="day-pill" data-day="4">Thu</button>
+            <button class="day-pill" data-day="5">Fri</button>
+            <button class="day-pill" data-day="6">Sat</button>
+            <button class="day-pill" data-day="0">Sun</button>
+          </div>
 
-        <!-- Timetable Class Cards -->
-        <div class="timetable-list" id="timetable-classes">
-          <!-- Populated dynamically -->
+          <!-- Timetable Class Cards -->
+          <div class="timetable-list" id="timetable-classes">
+            <!-- Populated dynamically -->
+          </div>
         </div>
       </section>
 
@@ -112,12 +115,15 @@
           </div>
         </div>
 
-        <div class="section-title-bar" style="margin-top: 10px;">
-          <h2 class="section-title">Subject Summary</h2>
-        </div>
+        <!-- Summary Column wrapper for desktop grid -->
+        <div class="summary-column">
+          <div class="section-title-bar" style="margin-top: 10px;">
+            <h2 class="section-title">Subject Summary</h2>
+          </div>
 
-        <div class="subjects-list" id="analytics-subjects-list">
-          <!-- Populated dynamically -->
+          <div class="subjects-list" id="analytics-subjects-list">
+            <!-- Populated dynamically -->
+          </div>
         </div>
       </section>
 
@@ -291,6 +297,11 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav-bar">
+      <!-- Sidebar brand (hidden on mobile, visible on desktop sidebar) -->
+      <div class="sidebar-brand">
+        <i data-lucide="sparkles" class="brand-icon"></i>
+        <span>AttenTrack</span>
+      </div>
       <div class="nav-tab active" data-target="dashboard">
         <i data-lucide="calendar-days"></i>
         <span>Schedule</span>

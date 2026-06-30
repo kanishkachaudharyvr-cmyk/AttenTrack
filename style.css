@@ -133,8 +133,8 @@ body {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Desktop Mockup View (Wraps the container in a nice bezel when on large screen) */
-@media (min-width: 480px) {
+/* Desktop Mockup View (Wraps the container in a nice bezel when on large screen, up to tablet width) */
+@media (min-width: 480px) and (max-width: 767px) {
   .app-container {
     width: 420px;
     height: 860px;
@@ -1151,5 +1151,252 @@ input[type="range"].glass-range::-webkit-slider-thumb:active {
   100% {
     box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
     border-color: rgba(245, 158, 11, 0.4);
+  }
+}
+
+/* ==========================================
+   4. Desktop and Laptop Responsive Layout overrides
+   ========================================== */
+
+/* Sidebar branding element default (hidden on mobile) */
+.sidebar-brand {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  /* Hide title in header since it's in the sidebar */
+  .brand-section h1 {
+    display: none;
+  }
+  
+  .brand-section p {
+    font-size: 13px;
+    margin-top: 0;
+  }
+
+  .app-container {
+    width: 95vw;
+    max-width: 1280px;
+    height: 90vh;
+    max-height: 850px;
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 40px 100px -20px rgba(0, 0, 0, 0.8),
+      inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    background: rgba(10, 11, 23, 0.75);
+    backdrop-filter: blur(30px);
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 80px 1fr;
+    grid-template-areas:
+      "nav header"
+      "nav content";
+    transition: none; /* disable transition on desktop resize */
+  }
+
+  /* Assign grid areas */
+  .bottom-nav-bar {
+    grid-area: nav;
+  }
+  
+  .app-header {
+    grid-area: header;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0 32px;
+    height: 100%;
+  }
+  
+  .app-content {
+    grid-area: content;
+    padding: 32px;
+  }
+
+  /* Floating Action Button inside Container */
+  .fab {
+    position: absolute;
+    bottom: 32px;
+    right: 32px;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+  }
+
+  /* Sidebar styling for Bottom Nav Bar */
+  .bottom-nav-bar {
+    position: static; /* Let grid layout position it */
+    height: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 8px;
+    padding: 32px 16px;
+    border-radius: 0;
+    background: rgba(15, 17, 34, 0.4);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    margin-bottom: 32px;
+  }
+
+  .sidebar-brand .brand-icon {
+    color: var(--color-primary);
+    width: 24px;
+    height: 24px;
+  }
+
+  .sidebar-brand span {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .nav-tab {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-radius: var(--border-radius-sm);
+    width: 100%;
+    height: auto;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+  }
+
+  .nav-tab:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .nav-tab i {
+    font-size: 18px;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+  }
+
+  .nav-tab span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .nav-tab.active {
+    color: white;
+    background: rgba(139, 92, 246, 0.12);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+  }
+
+  .nav-tab.active i {
+    transform: none;
+    color: var(--color-primary);
+  }
+
+  .nav-tab.active::after {
+    display: none; /* Hide bottom dot indicators on desktop */
+  }
+
+  /* Modals Centering on Desktop */
+  .modal-overlay {
+    align-items: center;
+  }
+
+  .modal-content {
+    width: 480px;
+    max-width: 90%;
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-overlay.active .modal-content {
+    transform: scale(1);
+  }
+
+  /* Dashboard Tab Responsive Grid */
+  #tab-dashboard.tab-content.active {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .dashboard-summary-card {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 24px;
+    padding: 32px;
+  }
+
+  .dashboard-summary-card .subject-status-ring-container {
+    margin: 0 auto;
+    align-self: center;
+  }
+
+  .dashboard-summary-card .summary-info {
+    text-align: center;
+  }
+
+  .dashboard-summary-card .summary-info h2 {
+    font-size: 36px;
+    margin-top: 4px;
+  }
+
+  .day-selector-pills {
+    overflow-x: visible;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Analytics Tab Responsive Grid */
+  #tab-analytics.tab-content.active {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stat-card {
+    padding: 24px;
+    gap: 8px;
+  }
+
+  .stat-card .value {
+    font-size: 28px;
+  }
+
+  /* Simulator Tab Responsive Grid */
+  .simulator-form-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* Settings Tab Responsive Grid */
+  .settings-menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .settings-menu > .glass:last-child {
+    grid-column: span 2;
   }
 }
