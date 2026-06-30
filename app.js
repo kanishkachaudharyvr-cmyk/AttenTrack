@@ -1674,22 +1674,6 @@ elements.loginGoogleBtn.onclick = function() {
       showToast(`Google Sign-In failed: ${error.message}`, 'error');
     });
   } else {
-    // Check if Google Sign-In is unavailable because database credentials are not configured yet
-    const storedConfig = localStorage.getItem('attentrack_firebase_config');
-    let isCustomConfigSet = false;
-    if (storedConfig) {
-      try {
-        isCustomConfigSet = !!JSON.parse(storedConfig).apiKey;
-      } catch (e) {}
-    }
-    const isDefaultConfigSet = DEFAULT_FIREBASE_CONFIG.apiKey && DEFAULT_FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
-
-    if (!isCustomConfigSet && !isDefaultConfigSet) {
-      showToast("Google Sign-In is offline. Admin: Configure Firebase in app.js.", "error");
-      alert("Google Sign-In is currently unavailable because the administrator has not configured the Firebase project credentials in app.js yet. Please use 'Enter as Guest (Offline)' to use the app in offline mode.");
-      return;
-    }
-
     // Offline simulation (Mock Google user profile)
     const mockUser = {
       uid: 'mock-google-user',
